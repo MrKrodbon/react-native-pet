@@ -1,5 +1,5 @@
 import {Platform, StyleSheet} from 'react-native';
-import {fonts} from '../../../constants/fonts';
+import {fonts} from '../../constants/fonts';
 
 export default StyleSheet.create({
   mainWrapper: {
@@ -31,6 +31,21 @@ export default StyleSheet.create({
     padding: 10,
     borderRadius: 20,
     flex: 1,
+  },
+  activeTab: {
+    alignItems: 'center',
+    backgroundColor: '#F8F8F9',
+    padding: 10,
+    borderRadius: 20,
+    flex: 1,
+  },
+
+  disabledTab: {
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 20,
+    flex: 1,
+    opacity: 0.7,
   },
   authText: {
     color: '#0B0B0B',

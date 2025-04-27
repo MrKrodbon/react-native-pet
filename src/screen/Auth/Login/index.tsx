@@ -1,17 +1,14 @@
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+import {View} from 'react-native';
 import React, {useState} from 'react';
-import styles from './styles';
-import ViewPassIcon from '../../../assets/icons/ViewPassIcon';
-import {HidePassIcon} from '../../../assets/icons';
+import styles from '../styles';
+import AuthLayout from '../../../components/AuthLayout';
+
+import AuthHeader from '../../../components/AuthHeader';
+import Input from '../../../common/components/Input';
+import DefaultButton from '../../../common/components/DefaultButton';
+import auth from '@react-native-firebase/auth';
+import {useNavigation} from '@react-navigation/core';
+import {ScreenNames} from '../../../constants/screenNames';
 
 interface IInputValue {
   email: string;
@@ -28,7 +25,7 @@ export default function LoginPage() {
     errorPassword: null,
   });
 
-  const [isPassHidden, setIsPassHidden] = useState(true);
+  const navigation = useNavigation();
 
   const loginBtnDisabled = Boolean(
     inputValues.errorEmail ||
@@ -52,7 +49,7 @@ export default function LoginPage() {
       handleChangeInput('errorEmail', null);
     }
   };
-  const checkPassword = text => {
+  const checkPassword = (text: string) => {
     if (text.length < 8) {
       handleChangeInput(
         'errorPassword',
@@ -63,83 +60,46 @@ export default function LoginPage() {
     }
   };
 
-  const onHidePasswordClick = () => {};
-  return (
-    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <KeyboardAvoidingView
-        style={{flex: 1}}
-        keyboardVerticalOffset={Platform.select({android: 20, ios: 90})}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={[styles.mainWrapper]}>
-          <View style={[styles.titleContainer]}>
-            <Text style={styles.title}>Раді тебе вітати!</Text>
-            <Text style={styles.welcomeText}>
-              Кожен пухнастик заслуговує на дбайливих господарів.Ми допоможемо
-              тобі знайти друга.
-            </Text>
-          </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.loginBtn}>
-              <Text style={styles.authText}>Вхід</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.registrationBtn}>
-              <Text style={styles.authText}>Реєстрація</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.formContainer}>
-            <View style={styles.inputContainer}>
-              <TextInput
-                placeholder={'Email'}
-                style={styles.input}
-                placeholderTextColor={'#838383'}
-                onBlur={() => {
-                  checkEmail();
-                }}
-                value={inputValues.email}
-                onChangeText={text => handleChangeInput('email', text)}
-              />
-            </View>
-            {inputValues.errorEmail && <Text>{inputValues.errorEmail}</Text>}
-            <View style={styles.inputContainer}>
-              <TextInput
-                placeholder={'Password'}
-                style={styles.input}
-                placeholderTextColor={'#838383'}
-                value={inputValues.password}
-                onChangeText={text => {
-                  handleChangeInput('password', text);
-                  checkPassword(text);
-                }}
-                secureTextEntry={isPassHidden}
-              />
-              <TouchableOpacity
-                onPress={() => {
-                  setIsPassHidden(!isPassHidden);
-                }}
-                hitSlop={{
-                  top: 15,
-                  bottom: 15,
-                  right: 15,
-                  left: 15,
-                }}>
-                {!isPassHidden ? <ViewPassIcon /> : <HidePassIcon />}
-              </TouchableOpacity>
-            </View>
+  const onLogin = async (email: string, password: string) => {
+    try {
+      const result = await auth().signInWithEmailAndPassword(email, password);
+      if (result.user) {
+        navigation.navigate(ScreenNames.HOME_PAGE);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-            {inputValues.errorPassword && (
-              <Text>{inputValues.errorPassword}</Text>
-            )}
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.loginBtnContainer,
-              loginBtnDisabled && {opacity: 0.5},
-            ]}
-            disabled={loginBtnDisabled}>
-            <Text style={styles.loginText}>Увійти</Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+  return (
+    <AuthLayout>
+      <AuthHeader activeTab={'login'} />
+      <View style={styles.formContainer}>
+        <Input
+          onBlur={checkEmail}
+          value={inputValues.email}
+          onChangeText={text => handleChangeInput('email', text)}
+          error={inputValues.errorEmail}
+          placeholder={'Email'}
+        />
+        <Input
+          value={inputValues.password}
+          onChangeText={text => {
+            handleChangeInput('password', text);
+            checkPassword(text);
+          }}
+          error={inputValues.errorPassword}
+          placeholder={'Password'}
+          secureTextEntry
+        />
+      </View>
+      <DefaultButton
+        onPress={() => {
+          onLogin(inputValues.email, inputValues.password);
+        }}
+        disabled={loginBtnDisabled}
+        text={'Увійти'}
+      />
+    </AuthLayout>
   );
 }
